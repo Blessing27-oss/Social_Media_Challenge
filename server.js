@@ -1,12 +1,11 @@
 
 const express = require('express');
 const Joi = require('joi');
-const fs = require ('fs');
+//const fs = require ('fs');
 const app = express();
 const cors = require ('cors');
 const helmet = require ('helmet');
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
 
 
 //Add Middleware
@@ -14,21 +13,27 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-const dataFilePath = 'data/dali_social_media.json';
+// const dataFilePath = 'data/dali_social_media.json';
 
-//Load the lab members from the JSON file
-let labMembers = [];
+// //Load the lab members from the JSON file
+// let labMembers = [];
 
-try {
-    const data = fs.readFileSync (dataFilePath, 'utf8');
-    labMembers = JSON.parse(data);
-} catch (err) {
-        console.error('Error reading the lab members data:', err);
+// try {
+//     const data = fs.readFileSync (dataFilePath, 'utf8');
+//     labMembers = JSON.parse(data);
+// } catch (err) {
+//         console.error('Error reading the lab members data:', err);
     
-}
-//console.log(labMembers);
+// }
 
-const labMemberSchema = new Schema({
+
+mongoose.connect('mongodb://localhost:27017/labmembers')
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => console.log('MongoDB connection error:', err));
+
+
+  
+const labMemberSchema = new mongoose.Schema({
     name: { type: String, required: true },
     year: { type: String },
     dev: { type: Boolean },
@@ -49,6 +54,10 @@ const labMemberSchema = new Schema({
     picture: { type: String }
 });
 
+const LabMember = mongoose.model('LabMember', labMemberSchema, 'social-media-data');
+module.exports = LabMember;
+  
+
 // Validation schema for lab members
 function validateMember(member) {
     const schema = Joi.object({
@@ -59,25 +68,42 @@ function validateMember(member) {
     return schema.validate(member);
 }
 
+//Defining routes
 
 // GET all lab members
-app.get('/lab-members', (req, res) => {
-    res.json(labMembers);
+app.get('/lab-members', async (req, res) => {
+    
+    try {
+
+        console.log('Received request for lab members');
+        //const members = await mongoose.connection.db.collection('social-media-data').find().toArray(); // Ensure we're querying the correct collection
+        const members = await LabMember.find();  // Get all members from MongoDB
+        console.log('fetched members:', members);
+        if (members.length === 0) {
+            console.log('No lab members found!');
+        };
+
+
+        res.json(members);
+    } catch (err) {
+        res.status(500).send('Error fetching lab members');
+    }
 });
 
+
 // GET a specific lab member by name
-app.get('/lab-members/:name', (req, res) => {
-    const member = labMembers.find(m => m.name.toLowerCase() === req.params.name.toLowerCase());
+app.get('/lab-members/:name', async (req, res) => {
+    const member = await LabMember.findOne({ name: req.params.name });
     if (!member) return res.status(404).send('Lab member not found');
     res.json(member);
 });
 
-//create new lab memeber
-app.post('/lab-members', (req, res) => {
+// Create a new lab member
+app.post('/lab-members', async (req, res) => {
     const { error } = validateMember(req.body);
-    if(error) return res.status(400).send(error.details[0].message);
-        
-    const newMember = {
+    if (error) return res.status(400).send(error.details[0].message);
+
+    const newMember = new LabMember({
         name: req.body.name,
         year: req.body.year,
         dev: req.body.dev,
@@ -90,54 +116,63 @@ app.post('/lab-members', (req, res) => {
         birthday: req.body.birthday,
         home: req.body.home,
         quote: req.body.quote,
-        'favorite thing 1': { type: String },
-        'favorite thing 2': { type: String },
-        'favorite thing 3': { type: String },
-        'favorite dartmouth tradition': { type: String },
-        'fun fact': { type: String },
-        picture: { type: String },
-    };
-    labMembers.push(newMember);
-    fs.writeFileSync(dataFilePath, JSON.stringify(labMembers, null, 2));  // Save updated data
-    res.status(200).send(newMember);
+        'favorite thing 1': req.body['favorite thing 1'],
+        'favorite thing 2': req.body['favorite thing 2'],
+        'favorite thing 3': req.body['favorite thing 3'],
+        'favorite dartmouth tradition': req.body['favorite dartmouth tradition'],
+        'fun fact': req.body['fun fact'],
+        picture: req.body.picture
+    });
+
+    try {
+        await newMember.save();  // Save to MongoDB
+        res.status(200).send(newMember);
+    } catch (err) {
+        res.status(500).send('Error saving member to database');
+    }
 });
 
 
-//Upadte an existing lab member by name
-app.put('/lab-members/:name', (req, res) => {
-    //look up member
-    const member = labMembers.find(m => m.name.toLowerCase().trim() === req.params.name.toLowerCase().trim());
-    if (!member) return res.status(404).send('Lab member not found');
+// Update an existing lab member by name
+app.put('/lab-members/:name', async (req, res) => {
+    try {
+        // Look up the member by name
+        const member = await LabMember.findOne({ name: req.params.name });
+        if (!member) return res.status(404).send('Lab member not found');
 
-    //Validate
-    //If invalid, return 400 - Bad request
-    const { error } = validateMember(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
-  
-    //update member
-    member.name = req.body.name;
-    member.year = req.body.year;
-    member.dev = req.body.dev;
-    member.des = req.body.des;
-    member.pm = req.body.pm;
-    member.core = req.body.core;
-    member.mentor = req.body.mentor;
-    member.major = req.body.major;
-    member.minor = req.body.minor;
-    member.birthday = req.body.birthday;
-    member.home = req.body.home;
-    member.quote = req.body.quote;
-    member.picture = { type: String },
+        // Validate
+        const { error } = validateMember(req.body);
+        if (error) return res.status(400).send(error.details[0].message);
 
-    fs.writeFileSync(dataFilePath, JSON.stringify(labMembers, null, 2));  // Save updated data
-    //Return the updated member
-    res.send(member);
+        // Update the member's fields
+        member.name = req.body.name;
+        member.year = req.body.year;
+        member.dev = req.body.dev;
+        member.des = req.body.des;
+        member.pm = req.body.pm;
+        member.core = req.body.core;
+        member.mentor = req.body.mentor;
+        member.major = req.body.major;
+        member.minor = req.body.minor;
+        member.birthday = req.body.birthday;
+        member.home = req.body.home;
+        member.quote = req.body.quote;
+        member.picture = req.body.picture;
+
+        await member.save();  // Save the updated member to MongoDB
+
+        res.send(member);
+    } catch (err) {
+        res.status(500).send('Error updating member');
+    }
 });
+
 
 // GET /lab-members/years - Get count of lab members by graduation year
 app.get('/lab-members/years', async (req, res) => {
     try {
       const members = await LabMember.find(); // Get all lab members
+      console.log(members);
   
       const yearsSet = new Set(); // Create a Set to store unique years
       const yearsCount = {}; // This object will store counts of each year
@@ -157,7 +192,7 @@ app.get('/lab-members/years', async (req, res) => {
     } catch (err) {
       res.status(500).json({ message: 'Error fetching year data' });
     }
-  });
+});
   
 
 
@@ -184,7 +219,7 @@ app.get('/lab-members/majors', async (req, res) => {
     } catch (err) {
       res.status(500).json({ message: 'Error fetching major data' });
     }
-  });
+});
   
 
 // GET /lab-members/favorite-things - Aggregate favorite things data
@@ -293,27 +328,18 @@ app.get('/lab-members/age-distribution', async (req, res) => {
   });
   
 
-//Delete a lab member by name
-app.delete('/lab-members/:name', (req, res) => {
-
-    const memberIndex = labMembers.findIndex(m => m.name.toLowerCase() === req.params.name.toLowerCase());
-    if (memberIndex === -1) return res.status(404).send('Lab member not found');
-
-    const deletedMember = labMembers.splice(memberIndex, 1)[0];
-    fs.writeFileSync(dataFilePath, JSON.stringify(labMembers, null, 2));  // Save updated data
-    res.send(deletedMember);
+// Delete a lab member by name
+app.delete('/lab-members/:name', async (req, res) => {
+    try {
+        const member = await LabMember.findOneAndDelete({ name: req.params.name });
+        if (!member) return res.status(404).send('Lab member not found');
+        res.send(member);
+    } catch (err) {
+        res.status(500).send('Error deleting member');
+    }
 });
-
 
 //Port - environment variable
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server running at ${port}...`));
+app.listen(port, () => console.log(`Server running at  port ${port}...`));
 
-const LabMember = mongoose.model('LabMember', labMemberSchema);
-module.exports = LabMember;
-
-//group data of similar types e.g grouping CS majors,
-//use a set
-//returns an array to the front-end to use for data visualization
-//check reducer functions
-//modify my api to receive filters
