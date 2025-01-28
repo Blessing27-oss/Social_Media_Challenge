@@ -1,0 +1,21 @@
+# Node modules
+node_modules/
+
+# Logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build output
+build/
+
+# Dependency directories
+.pnp/
+.pnp.js
+
+# React Native
+.expo/
+
+# dotenv environment variables file
+.env
+node_modules
