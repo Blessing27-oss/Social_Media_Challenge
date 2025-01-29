@@ -1,77 +1,114 @@
+/* App container and basic styling */
 .App {
+  text-align: center;
+  font-family: Arial, sans-serif;  /* Ensure consistent font across the app */
+}
+
+/* Navigation Styles */
+nav ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+nav ul li {
+  display: inline;
+  margin: 0 10px;
+}
+
+/* Members Grid for displaying member cards */
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Styling for individual member cards */
+.member-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* src/App.css */
-.user-profile-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.user-profile {
-  border: 1px solid #ddd;
-  padding: 20px;
-  border-radius: 8px;
+.member-card img {
   width: 200px;
+  height: 300px;
+  border-radius: 50%;
+  object-fit: cover; 
 }
 
-.posts-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.post {
-  border: 1px solid #ddd;
+/* Dashboard container styles */
+.dashboard {
   padding: 20px;
-  border-radius: 8px;
+  background-color: #f4f7fc;  /* Light background */
+  font-family: Arial, sans-serif;  /* Clean, modern font */
 }
 
-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 5px;
-  cursor: pointer;
+/* Styling for the Statistics Section (including charts) */
+.statistics {
+  padding: 20px;
+  display: grid;  /* Use grid layout for charts */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Create responsive columns */
+  gap: 20px;  /* Add space between the charts */
+  justify-content: center;  /* Center align the charts */
+  align-items: start;  /* Align charts to the top of each cell */
 }
 
-button:hover {
-  background-color: #0056b3;
+/* Individual stat-card for each chart */
+.stat-card {
+  background-color: #fff;  /* White background */
+  border-radius: 10px;      /* Rounded corners */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  /* Soft shadow */
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;  /* Smooth transition on hover */
+}
+
+/* Stat card title */
+.stat-card-title {
+  font-size: 1.25rem;
+  margin-bottom: 15px;  /* Space between title and chart */
+  color: #333;
+}
+
+/* Hover effect for stat cards */
+.stat-card:hover {
+  transform: translateY(-5px);  /* Slight lift effect */
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);  /* Deeper shadow on hover */
+}
+
+/* Chart styling */
+.chart {
+  width: 100%;
+  height: 250px;  /* Fixed height for charts */
+  max-width: 100%;  /* Ensure the charts are not wider than their container */
+}
+
+/* Heading for Statistics Section */
+.statistics h2 {
+  text-align: center;   /* Center the heading */
+  margin-bottom: 30px;   /* Space below the heading */
+  color: #333;          /* Dark text for contrast */
+}
+
+/* Media Queries for responsive design */
+@media (max-width: 768px) {
+  .chart {
+    height: 200px;  /* Adjust height for medium screens */
+  }
+
+  .stat-card {
+    padding: 15px;  /* Slightly reduce padding on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .chart {
+    height: 150px;  /* Further adjust height on very small screens */
+  }
+
+  .stat-card {
+    padding: 10px;  /* Reduce padding even more */
+  }
 }

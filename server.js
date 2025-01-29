@@ -1,17 +1,18 @@
 
 const express = require('express');
+const app = express();
 const Joi = require('joi');
 //const fs = require ('fs');
-const app = express();
 const cors = require ('cors');
 const helmet = require ('helmet');
 const mongoose = require('mongoose');
-
+const LabMember = require('./schema');
 
 //Add Middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
 
 // const dataFilePath = 'data/dali_social_media.json';
 
@@ -26,37 +27,15 @@ app.use(express.json());
     
 // }
 
+main().then(() => {
+  console.log("Connected to database")
+}).catch((err) => {
+  console.log(err)
+})
 
-mongoose.connect('mongodb://localhost:27017/labmembers')
-  .then(() => console.log('MongoDB connected'))
-  .catch((err) => console.log('MongoDB connection error:', err));
-
-
-  
-const labMemberSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    year: { type: String },
-    dev: { type: Boolean },
-    des: { type: Boolean },
-    pm: { type: Boolean },
-    core: { type: Boolean },
-    mentor: { type: Boolean },
-    major: { type: String },
-    minor: { type: String },
-    birthday: { type: String },
-    home: { type: String },
-    quote: { type: String },
-    'favorite thing 1': { type: String },
-    'favorite thing 2': { type: String },
-    'favorite thing 3': { type: String },
-    'favorite dartmouth tradition': { type: String },
-    'fun fact': { type: String },
-    picture: { type: String }
-});
-
-const LabMember = mongoose.model('LabMember', labMemberSchema, 'social-media-data');
-module.exports = LabMember;
-  
+async function main(){
+  await mongoose.connect('mongodb://localhost:27017/lab-member')
+}
 
 // Validation schema for lab members
 function validateMember(member) {
@@ -68,24 +47,22 @@ function validateMember(member) {
     return schema.validate(member);
 }
 
-//Defining routes
+//Defining route
 
 // GET all lab members
 app.get('/lab-members', async (req, res) => {
-    
     try {
-
         console.log('Received request for lab members');
         //const members = await mongoose.connection.db.collection('social-media-data').find().toArray(); // Ensure we're querying the correct collection
         const members = await LabMember.find();  // Get all members from MongoDB
+        
         console.log('fetched members:', members);
         if (members.length === 0) {
             console.log('No lab members found!');
         };
-
-
         res.json(members);
     } catch (err) {
+
         res.status(500).send('Error fetching lab members');
     }
 });
@@ -169,7 +146,7 @@ app.put('/lab-members/:name', async (req, res) => {
 
 
 // GET /lab-members/years - Get count of lab members by graduation year
-app.get('/lab-members/years', async (req, res) => {
+app.get('/lab-members/years/all', async (req, res) => {
     try {
       const members = await LabMember.find(); // Get all lab members
       console.log(members);
@@ -197,7 +174,7 @@ app.get('/lab-members/years', async (req, res) => {
 
 
 // GET /lab-members/majors - Get count of lab members by major
-app.get('/lab-members/majors', async (req, res) => {
+app.get('/lab-members/majors/all', async (req, res) => {
     try {
       const members = await LabMember.find(); // Get all lab members
   
@@ -223,7 +200,7 @@ app.get('/lab-members/majors', async (req, res) => {
   
 
 // GET /lab-members/favorite-things - Aggregate favorite things data
-app.get('/lab-members/favorite-things', async (req, res) => {
+app.get('/lab-members/favorite-things/all', async (req, res) => {
     try {
       const members = await LabMember.find(); // Get all lab members
   
@@ -257,7 +234,7 @@ app.get('/lab-members/favorite-things', async (req, res) => {
 });
 
 // GET /lab-members/mentor-status - Get the count of lab members by mentor status
-app.get('/lab-members/mentor-status', async (req, res) => {
+app.get('/lab-members/mentor-status/all', async (req, res) => {
     try {
       const members = await LabMember.find(); // Fetch all lab members
   
@@ -268,12 +245,14 @@ app.get('/lab-members/mentor-status', async (req, res) => {
       };
   
       // Loop through each member to count mentors and non-mentors
-      for (let i = 0; i < members.length; i++) {
-        const isMentor = members[i].mentor; // Check if the member is a mentor
-        if (isMentor) {
-          mentorStatusCount.mentors++;
-        } else {
-          mentorStatusCount.nonMentors++;
+      if(members && members.length > 0){
+        for (let i = 0; i < members.length; i++) {
+          const isMentor = members[i].mentor; // Check if the member is a mentor
+          if (isMentor) {
+            mentorStatusCount.mentors++;
+          } else {
+            mentorStatusCount.nonMentors++;
+          }
         }
       }
   
@@ -286,7 +265,7 @@ app.get('/lab-members/mentor-status', async (req, res) => {
   
 
 // GET /lab-members/age-distribution - Get age distribution of lab members
-app.get('/lab-members/age-distribution', async (req, res) => {
+app.get('/lab-members/age-distribution/all', async (req, res) => {
     try {
       const members = await LabMember.find(); // Fetch all lab members
   
