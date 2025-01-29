@@ -6,14 +6,10 @@ DartConnect is a social media platform designed to help Dartmouth students conne
 
 Additionally, the platform includes a Statistics Section, where departments across campus can gather insights and data about student demographics and preferences, which can be useful for organizing events, improving student engagement, and enhancing the overall Dartmouth community experience.
 
-## Deployed Application
+## Screenshots:
 
-
-Screenshots/GIFs/Demo Video
-Screenshots:
-
-
-Setup Instructions
+Added as one of the documents
+## Setup Instructions
 To run this project locally, follow these steps:
 
 Prerequisites:
@@ -31,6 +27,9 @@ Node.js (v23.6.1)
     "react-dom": "^17.0.2",
     "rsuite": "^4.11.0",
     "set-value": "^4.1.0"
+    "axios": "^1.7.9",
+    "chart.js": "^4.4.7",
+    "web-vitals": "^4.2.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
